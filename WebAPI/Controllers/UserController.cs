@@ -19,19 +19,15 @@ namespace WebAPI.Controllers
             return BadRequest(new { message = "Error when creating user" });
         }
 
-
-        // Retrieve user profile (by username or email) (including userID)
         [HttpGet]
         [Route("getuser/{searchString}")]
         public IActionResult GetUser(string searchString)
         {
             User user = DBManager.GetUser(searchString);
 
-            // if account not found, account will be null, checked when getting request results
             return Json(user);
         }
 
-        // Update user profile
         [HttpPost]
         [Route("updateuser")]
         public IActionResult UpdateUser([FromBody] User user)
@@ -49,8 +45,6 @@ namespace WebAPI.Controllers
             return BadRequest(new { error = "Error when updating user" });
         }
 
-
-        // Delete user profile
         [HttpPost]
         [Route("deleteuserid/{userID}")]
         public IActionResult DeleteUser(int userID)
@@ -62,9 +56,6 @@ namespace WebAPI.Controllers
             return BadRequest("Error when deleting user");
         }
 
-
-        // ===== OTHER METHODS FOR USE IN TUTORIAL 8 APP =====
-
         [HttpGet]
         [Route("isvalidauth/{usernameOrEmail}/{password}")]
         public IActionResult IsValidAuth(string usernameOrEmail, string password)
@@ -72,17 +63,16 @@ namespace WebAPI.Controllers
             bool isValid = DBManager.IsValidAuth(usernameOrEmail, password);
             if (isValid)
             {
-                // Set the session after successful login
                 HttpContext.Session.SetString("User", usernameOrEmail);
             }
             return Json(isValid);
         }
 
+        /*
         [HttpGet]
         [Route("isloggedin")]
         public IActionResult IsLoggedIn()
         {
-            // Check if session has User logged in
             if (HttpContext.Session.GetString("User") != null)
             {
                 return Ok(true);
@@ -97,7 +87,7 @@ namespace WebAPI.Controllers
             HttpContext.Session.Clear();
             return Ok();
         }
-
+        */
 
     }
 }

@@ -14,10 +14,8 @@ namespace WebAPI.Controllers
         {
             try
             {
-                // Log the incoming parameters
                 Console.WriteLine($"Attempting transfer: From {senderNum} to {receiverNum}, Amount: {amount}, Type: {type}");
 
-                // Check sender account
                 if (senderNum.HasValue)
                 {
                     var senderAccount = DBManager.GetAccount(senderNum.Value);
@@ -28,10 +26,8 @@ namespace WebAPI.Controllers
                     }
                 }
 
-                // Proceed with transaction creation
                 if (DBManager.CreateTransaction(senderNum, receiverNum, amount, description, type, date))
                 {
-                    // Update account balances
                     if (senderNum.HasValue)
                     {
                         Account senderAccount = DBManager.GetAccount(senderNum.Value);
@@ -59,11 +55,8 @@ namespace WebAPI.Controllers
         {
             List<TransactionAccount> transactions = DBManager.GetAccountTransactions(accountNum, startDate, endDate);
 
-            // if account not found, account will be null, checked when getting request results
             return transactions;
         }
-
-        // get all transactions (date descending and ascending) (for admin)
 
         [HttpGet]
         [Route("getalldatedesc/{searchInput}/{startDate}/{endDate}")]
@@ -71,7 +64,6 @@ namespace WebAPI.Controllers
         {
             List<Models.Transaction> transactions = DBManager.GetAllTransactionsDateDesc(searchInput, startDate, endDate);
 
-            // if account not found, account will be null, checked when getting request results
             return transactions;
         }
 
@@ -81,7 +73,6 @@ namespace WebAPI.Controllers
         {
             List<Models.Transaction> transactions = DBManager.GetAllTransactionsDateAsc(searchInput, startDate, endDate);
 
-            // if account not found, account will be null, checked when getting request results
             return transactions;
         }
     }
