@@ -20,7 +20,7 @@ namespace WebAPI.Controllers
         }
 
 
-        // Retrieve user profile (by username or email) (including user_id)
+        // Retrieve user profile (by username or email) (including userID)
         [HttpGet]
         [Route("getuser/{searchString}")]
         public IActionResult GetUser(string searchString)

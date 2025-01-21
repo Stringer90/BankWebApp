@@ -8,28 +8,19 @@ namespace WebAPI.Controllers
     [ApiController]
     public class TransactionController : Controller
     {
-        // ===== FOR TRANSACTION MANAGEMENT PART OF TASK DESCRIPTION FOR TUTORIAL 7 =====
-
-        // Deposit and withdrawal operations already in AccountController (AccountDeposit and AccountWithdraw)
-
-        // Checking that balances are updated correctly:
-        //     In the Web App: checks that account has enough funds to withdraw from (if withdrawing).
-        //     Then: Call AccountController (AccountDeposit / AccountWithdraw) in the Web App.
-
-        // Store transaction (create transaction) (updated by avis cos wasnt working properly)
         [HttpPost]
-        [Route("createtransaction/{sender_num}/{receiver_num}/{amount}/{description}/{type}/{date}")]
-        public IActionResult CreateTransaction(int? sender_num, int? receiver_num, double amount, string description, string type, string date)
+        [Route("createtransaction/{senderNum}/{receiverNum}/{amount}/{description}/{type}/{date}")]
+        public IActionResult CreateTransaction(int? senderNum, int? receiverNum, double amount, string description, string type, string date)
         {
             try
             {
                 // Log the incoming parameters
-                Console.WriteLine($"Attempting transfer: From {sender_num} to {receiver_num}, Amount: {amount}, Type: {type}");
+                Console.WriteLine($"Attempting transfer: From {senderNum} to {receiverNum}, Amount: {amount}, Type: {type}");
 
                 // Check sender account
-                if (sender_num.HasValue)
+                if (senderNum.HasValue)
                 {
-                    var senderAccount = DBManager.GetAccount(sender_num.Value);
+                    var senderAccount = DBManager.GetAccount(senderNum.Value);
                     Console.WriteLine($"Sender account balance: {senderAccount?.Balance}");
                     if (senderAccount == null || senderAccount.Balance < amount)
                     {
@@ -38,18 +29,18 @@ namespace WebAPI.Controllers
                 }
 
                 // Proceed with transaction creation
-                if (DBManager.CreateTransaction(sender_num, receiver_num, amount, description, type, date))
+                if (DBManager.CreateTransaction(senderNum, receiverNum, amount, description, type, date))
                 {
                     // Update account balances
-                    if (sender_num.HasValue)
+                    if (senderNum.HasValue)
                     {
-                        Account senderAccount = DBManager.GetAccount(sender_num.Value);
-                        DBManager.UpdateAccount(sender_num.Value, (senderAccount.Balance ?? 0) - amount);
+                        Account senderAccount = DBManager.GetAccount(senderNum.Value);
+                        DBManager.UpdateAccount(senderNum.Value, (senderAccount.Balance ?? 0) - amount);
                     }
-                    if (receiver_num.HasValue)
+                    if (receiverNum.HasValue)
                     {
-                        Account receiverAccount = DBManager.GetAccount(receiver_num.Value);
-                        DBManager.UpdateAccount(receiver_num.Value, (receiverAccount.Balance ?? 0) + amount);
+                        Account receiverAccount = DBManager.GetAccount(receiverNum.Value);
+                        DBManager.UpdateAccount(receiverNum.Value, (receiverAccount.Balance ?? 0) + amount);
                     }
 
                     return Json(new { message = "Successfully created transaction and updated balances" });
@@ -62,15 +53,11 @@ namespace WebAPI.Controllers
             }
         }
 
-
-        // ===== OTHER METHODS FOR USE IN TUTORIAL 8 APP =====
-
-        // Get transactions involving an account, for display in a table.
         [HttpGet]
-        [Route("getacctrans/{account_num}/{start_date}/{end_date}")]
-        public IEnumerable<TransactionAccount> GetAccountTransactions(int account_num, string start_date, string end_date)
+        [Route("getacctrans/{accountNum}/{startDate}/{endDate}")]
+        public IEnumerable<TransactionAccount> GetAccountTransactions(int accountNum, string startDate, string endDate)
         {
-            List<TransactionAccount> transactions = DBManager.GetAccountTransactions(account_num, start_date, end_date);
+            List<TransactionAccount> transactions = DBManager.GetAccountTransactions(accountNum, startDate, endDate);
 
             // if account not found, account will be null, checked when getting request results
             return transactions;
