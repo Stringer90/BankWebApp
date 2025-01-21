@@ -7,7 +7,6 @@ namespace WebAPI.Data
     {
         private static string connectionString = "Data Source=mydatabase.db;Version=3;";
 
-        //updated by avis
         public static bool CreateAccount(int userID)
         {
             try
@@ -17,12 +16,6 @@ namespace WebAPI.Data
                     connection.Open();
                     using (SQLiteCommand command = connection.CreateCommand())
                     {
-                        /*
-                        command.CommandText = @"INSERT INTO Account (userID)
-                                                VALUES (@userID);
-                                                SELECT last_insert_rowid();";
-                        */
-
                         command.CommandText = @"INSERT INTO Account (userID)
                                                 VALUES (@userID);";
 
@@ -34,15 +27,6 @@ namespace WebAPI.Data
                         {
                             return true;
                         }
-
-                        //int newAccountId = Convert.ToInt32(command.ExecuteScalar());
-
-                        /*
-                        if (newAccountId > 0)
-                        {
-                            return new Account { AccountNum = newAccountId, UserID = userID, Balance = 0 };
-                        }
-                        */
                     }
                     connection.Close();
                 }
@@ -53,7 +37,7 @@ namespace WebAPI.Data
             }
             return false;
         }
-        //updated by avis
+
         public static Account GetAccount(int? accountNum)
         {
             Account account = null;
@@ -96,7 +80,7 @@ namespace WebAPI.Data
 
             return account;
         }
-        //updated by avis wasnt working properly
+        
         public static bool UpdateAccount(int? accountNum, double newBalance)
         {
             try
@@ -605,7 +589,7 @@ namespace WebAPI.Data
             return transactionList;
         }
 
-        public static bool CreateUser(string username, string password, string email, string address, string phone)
+        public static bool CreateUser(string username, string password, string email, string address, string phone, int admin = 0)
         {
             try
             {
@@ -618,7 +602,7 @@ namespace WebAPI.Data
                     using (SQLiteCommand command = connection.CreateCommand())
                     {
                         // SQL command to insert data
-                        command.CommandText = @"INSERT INTO User (username, password, email, address, phone) VALUES (@Username, @Password, @Email, @Address, @Phone)";
+                        command.CommandText = @"INSERT INTO User (username, password, email, address, phone, admin) VALUES (@Username, @Password, @Email, @Address, @Phone, @Admin)";
 
                         // Define parameters for the query
                         command.Parameters.AddWithValue("@Username", username);
@@ -626,6 +610,7 @@ namespace WebAPI.Data
                         command.Parameters.AddWithValue("@Email", email);
                         command.Parameters.AddWithValue("@Address", address);
                         command.Parameters.AddWithValue("@Phone", phone);
+                        command.Parameters.AddWithValue("@Admin", admin);
 
                         // Execute the SQL command
                         int rowsInserted = command.ExecuteNonQuery();
@@ -732,7 +717,6 @@ namespace WebAPI.Data
             }
         }
 
-
         public static bool DeleteUser(int userID)
         {
             try
@@ -808,6 +792,44 @@ namespace WebAPI.Data
             }
         }
 
+        public static bool IsAdminUser(string usernameOrEmail)
+        {
+            try
+            {
+                // Create a new SQLite connection
+                using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+
+                    // Create a new SQLite command to execute SQL
+                    using (SQLiteCommand command = connection.CreateCommand())
+                    {
+                        // Build the SQL command
+                        command.CommandText = @"SELECT * FROM User WHERE ((username = @Username) OR (email = @Email)) AND admin = 1;";
+                        command.Parameters.AddWithValue("@Username", usernameOrEmail);
+                        command.Parameters.AddWithValue("@Email", usernameOrEmail);
+
+                        // Execute the SQL command
+                        using (SQLiteDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                return false;
+            }
+        }
+
         public static void DBInitialise()
         {
             CreateUserTable();
@@ -815,13 +837,12 @@ namespace WebAPI.Data
             CreateTransactionTable();
 
             // Insert Admin user, userID will be 1
-            CreateUser("admin", "admin", "admin@email.com", "1 Admin St", "0412345678");
+            CreateUser("admin", "admin", "admin@email.com", "1 Admin St", "0412345678", 1);
 
             // Data Seeding
             SeedData();
         }
 
-        // Create user table
         public static bool CreateUserTable()
         {
             try
@@ -843,7 +864,8 @@ namespace WebAPI.Data
                             password VARCHAR(20) NOT NULL,
                             email VARCHAR(50) NOT NULL,
                             address VARCHAR(100) NOT NULL,
-                            phone VARCHAR(10) NOT NULL
+                            phone VARCHAR(10) NOT NULL,
+                            admin INTEGER DEFAULT 0 CHECK (admin IN (0, 1))
                         )";
 
                         // Execute the SQL command to create the table
@@ -861,7 +883,6 @@ namespace WebAPI.Data
             return false; // Create table failed
         }
 
-        // Create account table
         public static bool CreateAccountTable()
         {
             try
@@ -907,7 +928,6 @@ namespace WebAPI.Data
             return false; // Create table failed
         }
 
-        // Create tansactions table
         public static bool CreateTransactionTable()
         {
             try
@@ -950,7 +970,6 @@ namespace WebAPI.Data
             return false; // Create table failed
         }
 
-        // Seed data into database
         public static void SeedData()
         {
             Random random = new Random();
