@@ -9,7 +9,7 @@ namespace WebAPI.Controllers
     public class TransactionController : Controller
     {
         [HttpPost]
-        [Route("createtransaction/{senderNum}/{receiverNum}/{amount}/{description}/{type}/{date}")]
+        [Route("create/{senderNum}/{receiverNum}/{amount}/{description}/{type}/{date}")]
         public IActionResult CreateTransaction(int? senderNum, int? receiverNum, double amount, string description, string type, string date)
         {
             try
@@ -50,8 +50,8 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("getacctrans/{accountNum}/{startDate}/{endDate}")]
-        public IEnumerable<TransactionAccount> GetAccountTransactions(int accountNum, string startDate, string endDate)
+        [Route("{accountNum}")]
+        public IEnumerable<TransactionAccount> GetAccountTransactions(int accountNum)
         {
             List<TransactionAccount> transactions = DBManager.GetAccountTransactions(accountNum, startDate, endDate);
 
@@ -59,21 +59,13 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("getalldatedesc/{searchInput}/{startDate}/{endDate}")]
-        public IEnumerable<Models.Transaction> GetAllTransactionsDateDesc(string searchInput, string startDate, string endDate)
+        [Route("all")]
+        public IEnumerable<Transaction> GetAllTransactions()
         {
             List<Models.Transaction> transactions = DBManager.GetAllTransactionsDateDesc(searchInput, startDate, endDate);
 
             return transactions;
         }
 
-        [HttpGet]
-        [Route("getalldateasc/{searchInput}/{startDate}/{endDate}")]
-        public IEnumerable<Models.Transaction> GetAllTransactionsDateAsc(string searchInput, string startDate, string endDate)
-        {
-            List<Models.Transaction> transactions = DBManager.GetAllTransactionsDateAsc(searchInput, startDate, endDate);
-
-            return transactions;
-        }
     }
 }

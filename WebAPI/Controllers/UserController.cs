@@ -9,7 +9,7 @@ namespace WebAPI.Controllers
     public class UserController : Controller
     {
         [HttpPost]
-        [Route("createuser")]
+        [Route("create")]
         public IActionResult CreateUser([FromBody] User user)
         {
             if (DBManager.CreateUser(user.Username, user.Password, user.Email, user.Address, user.Phone))
@@ -20,7 +20,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("getuser/{searchString}")]
+        [Route("{searchString}")]
         public IActionResult GetUser(string searchString)
         {
             User user = DBManager.GetUser(searchString);
@@ -29,7 +29,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("updateuser")]
+        [Route("update")]
         public IActionResult UpdateUser([FromBody] User user)
         {
             string username = user.Username;
@@ -46,8 +46,8 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("deleteuserid/{userID}")]
-        public IActionResult DeleteUser(int userID)
+        [Route("delete")]
+        public IActionResult DeleteUser([FromBody] int userID)
         {
             if (DBManager.DeleteUser(userID))
             {
@@ -56,9 +56,9 @@ namespace WebAPI.Controllers
             return BadRequest("Error when deleting user");
         }
 
-        [HttpGet]
-        [Route("isvalidauth/{usernameOrEmail}/{password}")]
-        public IActionResult IsValidAuth(string usernameOrEmail, string password)
+        [HttpPost]
+        [Route("auth")]
+        public IActionResult IsValidAuth([FromBody] User user)
         {
             bool isValid = DBManager.IsValidAuth(usernameOrEmail, password);
             if (isValid)

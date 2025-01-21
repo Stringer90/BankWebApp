@@ -9,8 +9,8 @@ namespace WebAPI.Controllers
     public class AccountController : Controller
     {
         [HttpPost]
-        [Route("createaccount/{userID}")]
-        public IActionResult CreateAccount(int userID)
+        [Route("create")]
+        public IActionResult CreateAccount([FromBody] int userID)
         {
             bool result = DBManager.CreateAccount(userID);
             if (result)
@@ -21,7 +21,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("getaccount/{accountNum}")]
+        [Route("{accountNum}")]
         public IActionResult GetAccount(int accountNum)
         {
             Account account = DBManager.GetAccount(accountNum);
@@ -30,8 +30,8 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("updateaccount/{accountNum}/{newBalance}")]
-        public IActionResult UpdateAccount(int accountNum, double newBalance)
+        [Route("update")]
+        public IActionResult UpdateAccount([FromBody] Account account)
         {
             if (DBManager.UpdateAccount(accountNum, newBalance))
             {
@@ -41,8 +41,8 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("deleteaccount/{accountNum}")]
-        public IActionResult DeleteAccount(int accountNum)
+        [Route("delete")]
+        public IActionResult DeleteAccount([FromBody] int accountNum)
         {
             if (DBManager.DeleteAccount(accountNum))
             {
@@ -52,8 +52,8 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("accountwithdraw/{accountNum}/{amount}")]
-        public IActionResult AccountWithdraw(int accountNum, double amount)
+        [Route("withdraw")]
+        public IActionResult AccountWithdraw([FromBody] Account account)
         {
             if (DBManager.AccountWithdraw(accountNum, amount))
             {
@@ -63,8 +63,8 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("accountdeposit/{accountNum}/{amount}")]
-        public IActionResult AccountDeposit(int accountNum, double amount)
+        [Route("deposit")]
+        public IActionResult AccountDeposit([FromBody] Account acount)
         {
             if (DBManager.AccountDeposit(accountNum, amount))
             {
@@ -74,7 +74,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("getaccountsofuser/{userID}")]
+        [Route("{userID}/accounts")]
         public IEnumerable<Account> GetAccountsOfUser(int userID)
         {
             List<Account> accounts = DBManager.GetAccountsOfUser(userID);
