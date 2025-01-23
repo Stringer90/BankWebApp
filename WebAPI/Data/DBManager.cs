@@ -16,8 +16,7 @@ namespace WebAPI.Data
                     connection.Open();
                     using (SQLiteCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = @"INSERT INTO Account (userID)
-                                                VALUES (@userID);";
+                        command.CommandText = @"INSERT INTO Account (userID) VALUES (@userID);";
 
                         command.Parameters.AddWithValue("@userID", userID);
 
@@ -28,19 +27,18 @@ namespace WebAPI.Data
                             return true;
                         }
                     }
-                    connection.Close();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                return false;
             }
             return false;
         }
 
-        public static Account GetAccount(int? accountNum)
+        public static Account? GetAccount(int? accountNum)
         {
-            Account account = null;
+            Account? account = null;
 
             try
             {
@@ -62,25 +60,19 @@ namespace WebAPI.Data
                                     UserID = Convert.ToInt32(reader["userID"]),
                                     Balance = Convert.ToDouble(reader["balance"])
                                 };
-                                Console.WriteLine($"Retrieved account: {account.AccountNum}, Balance: {account.Balance}");
-                            }
-                            else
-                            {
-                                Console.WriteLine($"No account found with number: {accountNum}");
                             }
                         }
                     }
-                    connection.Close();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"Error in GetAccount: {ex.Message}");
+                return null;
             }
 
             return account;
         }
-        
+
         public static bool UpdateAccount(int? accountNum, double newBalance)
         {
             try
@@ -163,14 +155,12 @@ namespace WebAPI.Data
 
                         // Execute the SQL command
                         int rowsUpdated = command.ExecuteNonQuery();
-                        connection.Close();
 
                         if (rowsUpdated > 0)
                         {
                             return true;
                         }
                     }
-                    connection.Close();
                 }
                 return false;
             }
@@ -498,97 +488,6 @@ namespace WebAPI.Data
             return transactionList;
         }
 
-        public static List<Transaction> GetAllTransactionsDateAsc(string searchInput, string startDate, string endDate)
-        {
-            List<Transaction> transactionList = new List<Transaction>();
-
-            try
-            {
-                // Create a new SQLite connection
-                using (SQLiteConnection connection = new SQLiteConnection(connectionString))
-                {
-                    connection.Open();
-
-                    // Create a new SQLite command to execute SQL
-                    using (SQLiteCommand command = connection.CreateCommand())
-                    {
-                        // Build the SQL command
-                        /*
-                        command.CommandText = @"
-                            SELECT * FROM Transactions t
-                            WHERE 
-                                (t.date BETWEEN @StartDate AND @EndDate)
-                                AND
-                                (t.description LIKE '%' || @SearchInput || '%' OR t.type LIKE '%' || @SearchInput || '%')
-                            ORDER BY date ASC";
-                        */
-
-                        command.CommandText = @"
-                            SELECT 
-                                t.date,
-                                (SELECT u.username || ' (' || a.accountID || ')' 
-                                FROM Account a 
-                                    JOIN User u ON a.userID = u.userID 
-                                WHERE a.accountID = t.senderNum) 
-                                AS sender,
-                                (SELECT u.username || ' (' || a.accountID || ')' 
-                                FROM Account a 
-                                    JOIN User u ON a.userID = u.userID 
-                                WHERE a.accountID = t.receiverNum) 
-                                AS receiver,
-                                t.type,
-                                t.amount,
-                                t.description
-                            FROM Transactions t
-                            WHERE 
-                                (t.date BETWEEN @StartDate AND @EndDate)
-                                AND
-                                (t.description LIKE '%' || @SearchInput || '%' 
-                                OR t.type LIKE '%' || @SearchInput || '%' 
-                                OR (SELECT u.username || ' (' || a.accountID || ')' 
-                                    FROM Account a 
-                                    JOIN User u ON a.userID = u.userID 
-                                    WHERE a.accountID = t.senderNum) LIKE '%' || @SearchInput || '%' 
-                                OR (SELECT u.username || ' (' || a.accountID || ')' 
-                                    FROM Account a 
-                                    JOIN User u ON a.userID = u.userID 
-                                    WHERE a.accountID = t.receiverNum) LIKE '%' || @SearchInput || '%' 
-                            ORDER BY t.date ASC";
-
-
-                        command.Parameters.AddWithValue("@SearchInput", searchInput);
-                        command.Parameters.AddWithValue("@StartDate", startDate);
-                        command.Parameters.AddWithValue("@EndDate", endDate);
-
-                        // Execute the SQL command and retrieve data
-                        using (SQLiteDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                Transaction transaction = new Transaction();
-
-                                transaction.Date = reader.GetDateTime(reader.GetOrdinal("date")).ToString("yyyy-MM-dd");
-                                transaction.Sender = reader["sender"]?.ToString();
-                                transaction.Receiver = reader["receiver"]?.ToString();
-                                transaction.Type = reader["type"]?.ToString();
-                                transaction.Amount = Convert.ToDouble(reader["amount"]);
-                                transaction.Description = reader["description"]?.ToString();
-
-                                transactionList.Add(transaction);
-                            }
-                        }
-                    }
-                    connection.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error: " + ex.Message);
-            }
-
-            return transactionList;
-        }
-
         public static bool CreateUser(string username, string password, string email, string address, string phone, int admin = 0)
         {
             try
@@ -631,26 +530,20 @@ namespace WebAPI.Data
             return false;
         }
 
-        public static User GetUser(string searchString)
+        public static User? GetUser(string searchString)
         {
-            User user = null;
+            User? user = null;
 
             try
             {
-                // Create a new SQLite connection
                 using (SQLiteConnection connection = new SQLiteConnection(connectionString))
                 {
-                    connection.Open();
-
-                    // Create a new SQLite command to execute SQL
                     using (SQLiteCommand command = connection.CreateCommand())
                     {
-                        // Build the SQL command to select a student by ID
                         command.CommandText = "SELECT * FROM User WHERE username = @Username OR email = @Email";
                         command.Parameters.AddWithValue("@Username", searchString);
                         command.Parameters.AddWithValue("@Email", searchString);
 
-                        // Execute the SQL command and retrieve data
                         using (SQLiteDataReader reader = command.ExecuteReader())
                         {
                             if (reader.Read())
@@ -665,12 +558,48 @@ namespace WebAPI.Data
                             }
                         }
                     }
-                    connection.Close();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                return null;
+            }
+
+            return user;
+        }
+
+        public static User? GetUserWithID(int userID)
+        {
+            User? user = null;
+
+            try
+            {
+                using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+                {
+                    using (SQLiteCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = "SELECT * FROM User WHERE userID = @UserID";
+                        command.Parameters.AddWithValue("@UserID", userID);
+
+                        using (SQLiteDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                user = new User();
+                                user.UserID = Convert.ToInt32(reader["userID"]);
+                                user.Username = reader["username"]?.ToString();
+                                user.Password = reader["password"]?.ToString();
+                                user.Email = reader["email"].ToString();
+                                user.Address = reader["address"].ToString();
+                                user.Phone = reader["phone"].ToString();
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return null;
             }
 
             return user;

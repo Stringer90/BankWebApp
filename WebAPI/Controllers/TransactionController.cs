@@ -66,6 +66,5 @@ namespace WebAPI.Controllers
 
             return transactions;
         }
-
     }
 }

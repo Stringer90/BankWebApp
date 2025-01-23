@@ -5,10 +5,12 @@ using System.Diagnostics;
 
 namespace WebAPI.Controllers
 {
+    
     [Route("api/[controller]")]
     [ApiController]
     public class ExampleController : Controller
     {
+        
         [HttpGet]
         public IActionResult DeleteUser()
         {
@@ -18,14 +20,21 @@ namespace WebAPI.Controllers
         [HttpPost]
         public IActionResult CreateUser([FromBody] Example? example)
         {
+            /*
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState); // Returns detailed validation errors.
             }
+            */
 
             if (example == null)
             {
                 return BadRequest(new { message = "Body must not be null." });
+            }
+
+            if (example.id is null)
+            {
+                return BadRequest(new { message = "'id' must not be null." });
             }
 
             if (string.IsNullOrWhiteSpace(example.name))
@@ -43,7 +52,8 @@ namespace WebAPI.Controllers
 
 
 
-
+            
         }
+        
     }
 }
