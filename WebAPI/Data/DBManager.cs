@@ -540,9 +540,10 @@ namespace WebAPI.Data
                 {
                     using (SQLiteCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = "SELECT * FROM User WHERE username = @Username OR email = @Email";
+                        command.CommandText = "SELECT * FROM User WHERE username = @Username OR email = @Email OR phone = @Phone";
                         command.Parameters.AddWithValue("@Username", searchString);
                         command.Parameters.AddWithValue("@Email", searchString);
+                        command.Parameters.AddWithValue("@Phone", searchString);
 
                         using (SQLiteDataReader reader = command.ExecuteReader())
                         {

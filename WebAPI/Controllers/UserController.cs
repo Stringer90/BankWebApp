@@ -10,7 +10,7 @@ namespace WebAPI.Controllers
     {
         [HttpPost]
         [Route("create")]
-        public IActionResult CreateUser([FromBody] User user)
+        public IActionResult CreateUser([FromBody] User? user)
         {
             if (DBManager.CreateUser(user.Username, user.Password, user.Email, user.Address, user.Phone))
             {
