@@ -4,7 +4,8 @@ It uses an SQLite database with ADO.NET connectivity.
 
 This was originally a group project in a university course, where I did most of the API code.
 This is that API copied over to a new project, but with only my code and with some improvements.
-The API worked in the assignment, it is not expected to work now and has not been tested, it will be in the future.
+The API worked in the assignment, it is not expected to work now and has not been tested.
+I will test and fix it some time in the future.
 
 ## Functionality
 The API has the following controllers with the following functions:
