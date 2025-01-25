@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebAPI.Models;
 using WebAPI.Data;
+using System.Security.Principal;
+using System.Text.RegularExpressions;
 
 namespace WebAPI.Controllers
 {
@@ -9,62 +11,107 @@ namespace WebAPI.Controllers
     public class TransactionController : Controller
     {
         [HttpPost]
-        [Route("create/{senderNum}/{receiverNum}/{amount}/{description}/{type}/{date}")]
-        public IActionResult CreateTransaction(int? senderNum, int? receiverNum, double amount, string description, string type, string date)
+        [Route("create")]
+        public IActionResult CreateTransaction([FromBody] Transaction? transaction)
         {
             try
             {
-                Console.WriteLine($"Attempting transfer: From {senderNum} to {receiverNum}, Amount: {amount}, Type: {type}");
-
-                if (senderNum.HasValue)
+                if (transaction is null)
                 {
-                    var senderAccount = DBManager.GetAccount(senderNum.Value);
-                    Console.WriteLine($"Sender account balance: {senderAccount?.Balance}");
-                    if (senderAccount == null || senderAccount.Balance < amount)
-                    {
-                        return Json(new { message = $"Error: Insufficient funds or invalid sender account. Balance: {senderAccount?.Balance}, Amount: {amount}" });
-                    }
+                    return BadRequest("A 'Transaction' object must be provided.");
+                }
+                else if (string.IsNullOrWhiteSpace(transaction.Date))
+                {
+                    return BadRequest("Transaction Date cannot be null or whitespace.");
+                }
+                else if (transaction.Sender is null)
+                {
+                    return BadRequest("Transaction Sender cannot be null.");
+                }
+                else if (transaction.Receiver is null)
+                {
+                    return BadRequest("Transaction Receiver cannot be null.");
+                }
+                else if (string.IsNullOrWhiteSpace(transaction.Type))
+                {
+                    return BadRequest("Transaction Type cannot be null or whitespace.");
+                }
+                else if (transaction.Amount is null)
+                {
+                    return BadRequest("Transaction Amount cannot be null.");
+                }
+                else if (transaction.Amount <= 0)
+                {
+                    return BadRequest("Transaction Amount cannot be zero or a negative number.");
+                }
+                else if (string.IsNullOrWhiteSpace(transaction.Description))
+                {
+                    return BadRequest("Transaction Description cannot be null or whitespace.");
                 }
 
-                if (DBManager.CreateTransaction(senderNum, receiverNum, amount, description, type, date))
+                Account? receiverAccount = DBManager.GetAccount(transaction.Receiver.Value);
+                if (receiverAccount is null)
                 {
-                    if (senderNum.HasValue)
-                    {
-                        Account senderAccount = DBManager.GetAccount(senderNum.Value);
-                        DBManager.UpdateAccount(senderNum.Value, (senderAccount.Balance ?? 0) - amount);
-                    }
-                    if (receiverNum.HasValue)
-                    {
-                        Account receiverAccount = DBManager.GetAccount(receiverNum.Value);
-                        DBManager.UpdateAccount(receiverNum.Value, (receiverAccount.Balance ?? 0) + amount);
-                    }
-
-                    return Json(new { message = "Successfully created transaction and updated balances" });
+                    return BadRequest($"Transaction receiver account {transaction.Receiver} does not exist.");
                 }
-                return Json(new { message = "Error when creating transaction" });
+
+                Account? senderAccount = DBManager.GetAccount(transaction.Sender.Value);
+                if (senderAccount is null)
+                {
+                    return BadRequest($"Transaction sender account {transaction.Sender} does not exist.");
+                }
+                else if (senderAccount.Balance < transaction.Amount)
+                {
+                    return BadRequest($"Transaction sender account {transaction.Receiver} does not have the necessary funds to perform the transaction.");
+                }
+
+                if (!Regex.IsMatch(transaction.Date, @"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")) {
+                    return BadRequest($"Transaction date {transaction.Date} is an invalid date or invalid format.");
+                }
+                else if (new[] {"deposit", "withdrawal", "transfer"}.Contains(transaction.Type))
+                {
+                    return BadRequest("Transaction type can only be 'deposit', 'withdrawal' or 'transfer'.");
+                }
+
+                DBManager.AccountWithdraw(transaction.Sender.Value, transaction.Amount.Value);
+                DBManager.AccountDeposit(transaction.Receiver.Value, transaction.Amount.Value);
+                DBManager.CreateTransaction(transaction.Sender.Value, transaction.Receiver.Value, transaction.Amount.Value, transaction.Description, transaction.Type, transaction.Date);
+                
+                return Ok("Successfully completed the transaction.");
             }
             catch (Exception ex)
             {
-                return Json(new { message = $"Error: {ex.Message}" });
+                return BadRequest($"An error occurred: {ex.Message}");
             }
         }
 
         [HttpGet]
         [Route("{accountNum}")]
-        public IEnumerable<TransactionAccount> GetAccountTransactions(int accountNum)
+        public IActionResult GetAccountTransactions(int? accountNum)
         {
-            List<TransactionAccount> transactions = DBManager.GetAccountTransactions(accountNum, startDate, endDate);
+            if (accountNum is null)
+            {
+                return BadRequest("Account number cannot be null.");
+            }
 
-            return transactions;
+            Account? account = DBManager.GetAccount(accountNum.Value);
+            if (account is null)
+            {
+                return BadRequest($"An account {accountNum.Value} does not exist.");
+            }
+
+            List<TransactionAccount> transactions = DBManager.GetAccountTransactions(accountNum.Value);
+
+            return Ok(transactions);
         }
 
         [HttpGet]
         [Route("all")]
-        public IEnumerable<Transaction> GetAllTransactions()
+        public IActionResult GetAllTransactions()
         {
-            List<Models.Transaction> transactions = DBManager.GetAllTransactionsDateDesc(searchInput, startDate, endDate);
+            List<Models.Transaction> transactions = DBManager.GetAllTransactions();
 
-            return transactions;
+            return Ok(transactions);
         }
     }
 }

@@ -54,7 +54,7 @@ namespace WebAPI.Controllers
                     return BadRequest("Account number is a 5-digit number starting at 10,000.");
                 }
 
-                Account? account = DBManager.GetAccount(accountNum);
+                Account? account = DBManager.GetAccount(accountNum.Value);
 
                 if (account is null)
                 {
@@ -96,14 +96,14 @@ namespace WebAPI.Controllers
                     return BadRequest("New balance cannot be a negative value.");
                 }
 
-                Account? userAccount = DBManager.GetAccount(account.AccountNum);
+                Account? userAccount = DBManager.GetAccount(account.AccountNum.Value);
 
                 if (userAccount is null)
                 {
                     return BadRequest($"Account {account.AccountNum} does not exist.");
                 }
 
-                if (DBManager.UpdateAccount(account.AccountNum, account.Balance.Value))
+                if (DBManager.UpdateAccount(account.AccountNum.Value, account.Balance.Value))
                 {
                     return Ok("Successfully updated account balance");
                 }
@@ -131,7 +131,7 @@ namespace WebAPI.Controllers
                     return BadRequest("Account number is a 5-digit number starting at 10,000.");
                 }
 
-                Account? account = DBManager.GetAccount(accountNum);
+                Account? account = DBManager.GetAccount(accountNum.Value);
 
                 if (account is null)
                 {
@@ -177,7 +177,7 @@ namespace WebAPI.Controllers
                     return BadRequest("Amount to withdraw cannot be zero or a negative value.");
                 }
 
-                Account? userAccount = DBManager.GetAccount(account.AccountNum);
+                Account? userAccount = DBManager.GetAccount(account.AccountNum.Value);
 
                 if (userAccount is null)
                 {
@@ -228,7 +228,7 @@ namespace WebAPI.Controllers
                     return BadRequest("Cannot deposit nothing or a negative amount.");
                 }
 
-                Account? userAccount = DBManager.GetAccount(account.AccountNum);
+                Account? userAccount = DBManager.GetAccount(account.AccountNum.Value);
 
                 if (userAccount is null)
                 {

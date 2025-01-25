@@ -77,7 +77,7 @@ namespace WebAPI.Controllers
 
         [HttpGet]
         [Route("{searchString}")]
-        public IActionResult GetUser(string searchString)
+        public IActionResult GetUser(string? searchString)
         {
             try
             {

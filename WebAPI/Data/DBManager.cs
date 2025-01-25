@@ -36,7 +36,7 @@ namespace WebAPI.Data
             return false;
         }
 
-        public static Account? GetAccount(int? accountNum)
+        public static Account? GetAccount(int accountNum)
         {
             Account? account = null;
 
@@ -73,7 +73,7 @@ namespace WebAPI.Data
             return account;
         }
 
-        public static bool UpdateAccount(int? accountNum, double newBalance)
+        public static bool UpdateAccount(int accountNum, double newBalance)
         {
             try
             {
@@ -293,7 +293,7 @@ namespace WebAPI.Data
             return false;
         }
 
-        public static List<TransactionAccount> GetAccountTransactions(int accountNum, string startDate, string endDate)
+        public static List<TransactionAccount> GetAccountTransactions(int accountNum)
         {
             List<TransactionAccount> transactionList = new List<TransactionAccount>();
 
@@ -321,7 +321,7 @@ namespace WebAPI.Data
                                     JOIN Account a ON t.senderNum = a.accountID
                                     JOIN User u ON a.userID = u.userID
                                 WHERE 
-                                    t.receiverNum = @AccountID AND t.type = 'transfer' AND t.date BETWEEN @StartDate AND @EndDate
+                                    t.receiverNum = @AccountID AND t.type = 'transfer'
 
                                 UNION ALL
 
@@ -336,7 +336,7 @@ namespace WebAPI.Data
                                     JOIN Account a ON t.receiverNum = a.accountID
                                     JOIN User u ON a.userID = u.userID
                                 WHERE 
-                                    t.senderNum = @AccountID AND t.type = 'transfer' AND t.date BETWEEN @StartDate AND @EndDate
+                                    t.senderNum = @AccountID AND t.type = 'transfer'
 
                                 UNION ALL
 
@@ -349,7 +349,7 @@ namespace WebAPI.Data
                                 FROM 
                                     Transactions t
                                 WHERE 
-                                    t.receiverNum = @AccountID AND t.type = 'deposit' AND t.date BETWEEN @StartDate AND @EndDate
+                                    t.receiverNum = @AccountID AND t.type = 'deposit'
 
                                 UNION ALL
 
@@ -362,14 +362,12 @@ namespace WebAPI.Data
                                 FROM 
                                     Transactions t
                                 WHERE 
-                                    t.senderNum = @AccountID AND t.type = 'withdrawal' AND t.date BETWEEN @StartDate AND @EndDate
+                                    t.senderNum = @AccountID AND t.type = 'withdrawal'
                             )
                             AS result
                             ORDER BY date DESC";
 
                         command.Parameters.AddWithValue("@AccountID", accountNum);
-                        command.Parameters.AddWithValue("@StartDate", startDate);
-                        command.Parameters.AddWithValue("@EndDate", endDate);
 
                         // Execute the SQL command and retrieve data
                         using (SQLiteDataReader reader = command.ExecuteReader())
@@ -391,15 +389,15 @@ namespace WebAPI.Data
                     connection.Close();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                return transactionList;
             }
 
             return transactionList;
         }
 
-        public static List<Transaction> GetAllTransactionsDateDesc(string searchInput, string startDate, string endDate)
+        public static List<Transaction> GetAllTransactions()
         {
             List<Transaction> transactionList = new List<Transaction>();
 
@@ -423,6 +421,7 @@ namespace WebAPI.Data
                                 (t.description LIKE '%' || @SearchInput || '%' OR t.type LIKE '%' || @SearchInput || '%')
                             ORDER BY date DESC";
                         */
+                        /*
                         command.CommandText = @"
                             SELECT 
                                 t.date,
@@ -454,10 +453,25 @@ namespace WebAPI.Data
                                     JOIN User u ON a.userID = u.userID 
                                     WHERE a.accountID = t.receiverNum) LIKE '%' || @SearchInput || '%' 
                             ORDER BY t.date DESC";
+                        */
 
-                        command.Parameters.AddWithValue("@SearchInput", searchInput);
-                        command.Parameters.AddWithValue("@StartDate", startDate);
-                        command.Parameters.AddWithValue("@EndDate", endDate);
+                        command.CommandText = @"
+                            SELECT 
+                                t.date,
+                                    (SELECT u.username || ' (' || a.accountID || ')' 
+                                    FROM Account a 
+                                        JOIN User u ON a.userID = u.userID 
+                                    WHERE a.accountID = t.senderNum) 
+                                AS sender,
+                                    (SELECT u.username || ' (' || a.accountID || ')' 
+                                    FROM Account a 
+                                        JOIN User u ON a.userID = u.userID 
+                                    WHERE a.accountID = t.receiverNum) 
+                                AS receiver,
+                                t.type,
+                                t.amount,
+                                t.description
+                            FROM Transactions t";
 
                         // Execute the SQL command and retrieve data
                         using (SQLiteDataReader reader = command.ExecuteReader())
@@ -467,8 +481,8 @@ namespace WebAPI.Data
                                 Transaction transaction = new Transaction();
 
                                 transaction.Date = reader.GetDateTime(reader.GetOrdinal("date")).ToString("yyyy-MM-dd");
-                                transaction.Sender = reader["sender"]?.ToString();
-                                transaction.Receiver = reader["receiver"]?.ToString();
+                                transaction.Sender = (int)reader["sender"];
+                                transaction.Receiver = (int)reader["receiver"];
                                 transaction.Type = reader["type"].ToString();
                                 transaction.Amount = Convert.ToDouble(reader["amount"]);
                                 transaction.Description = reader["description"].ToString();
@@ -477,12 +491,11 @@ namespace WebAPI.Data
                             }
                         }
                     }
-                    connection.Close();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                return transactionList;
             }
 
             return transactionList;
@@ -922,7 +935,7 @@ namespace WebAPI.Data
                 CreateUser(username, password, email, address, phone);
 
                 // Get the user ID and store them
-                User user = GetUser(username);
+                User? user = GetUser(username);
                 userIds.Add(user.UserID);
             }
 
@@ -935,11 +948,11 @@ namespace WebAPI.Data
                     CreateAccount(userId);
                     // Get the id of the account just created above
                     // (get the account number of the most recently inserted account for the current user)
-                    Account account = GetAccount(GetAccountsOfUser(userId).Last().AccountNum);
+                    Account account = GetAccount(GetAccountsOfUser(userId).Last().AccountNum.Value);
                     accountIds.Add(account.AccountNum);
                     // Set the account balance to amount between 5000-10000
                     double balance = random.NextDouble() * 5000 + 5000;
-                    UpdateAccount(account.AccountNum, balance);
+                    UpdateAccount(account.AccountNum.Value, balance);
                 }
             }
 
