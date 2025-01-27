@@ -4,6 +4,7 @@ It uses an SQLite database with ADO.NET connectivity.
 
 This was originally a group project in a university course, where I did most of the API code.
 This is that API copied over to a new project, but with only my code and with some improvements.
+I can demonstrate our group's project during an interview, if needed.
 
 #### Note
 The API worked in the assignment, it is not expected to work now and has not been tested.
